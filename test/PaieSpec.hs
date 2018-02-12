@@ -43,6 +43,21 @@ cotisationSecuDeplafonnee date montant =
                                          ]
   where cotisation = 0.004 * montant
 
+
+arrondi :: Montant -> Montant
+arrondi m = (fromIntegral $ round $ m * 100) / 100
+
+salaireBrut :: Montant -> Montant
+salaireBrut net = secant 0.001 (\ b -> salaireNet b - net) net (2 * net)
+  where
+    salaireNet brut = brut * (1 - 0.004)
+    secant epsilon f guess1 guess0 = let
+      newGuess = guess1 - f guess1 * (guess1 - guess0) / (f guess1 - f guess0)
+      err =  abs (newGuess - guess1)
+      in if (err < epsilon)
+         then newGuess
+         else secant epsilon f newGuess guess1 
+
 spec :: Spec
 spec = describe "Générateur de paie" $ do
   let
@@ -55,6 +70,9 @@ spec = describe "Générateur de paie" $ do
         , Credit "200" 1000.00
         ]
       ]
+
+  it "calcule le brut" $ do
+    arrondi (salaireBrut 1000) `shouldBe` 1004.02
 
   describe "Charges patronales" $ do
 
