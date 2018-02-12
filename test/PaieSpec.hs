@@ -36,9 +36,17 @@ cotisationMaladie date montant =
                     ]
   where cotisation = 0.13 * montant
 
+cotisationSecuDeplafonnee :: Date -> Montant -> Transaction
+cotisationSecuDeplafonnee date montant =
+  Tx "Sécurité sociale déplafonnée" date [ Debit  "421100:TOTO"   cotisation
+                                         , Credit "431100:URSSAF" cotisation
+                                         ]
+  where cotisation = 0.004 * montant
 
 spec :: Spec
 spec = describe "Générateur de paie" $ do
+  let
+    aujourd'hui = date 2018 02 12
 
   it "génère la paie"  $ do
     paie (date 2018 02 12) 1000 `shouldBe`
@@ -50,9 +58,18 @@ spec = describe "Générateur de paie" $ do
 
   describe "Charges patronales" $ do
 
-    it "calcul les charges maladies" $ do
-     cotisationMaladie (date 2018 02 12) 1000 `shouldBe`
-      Tx "Maladie" (date 2018 02 12)
+    it "calcule les charges maladies" $ do
+     cotisationMaladie aujourd'hui 1000 `shouldBe`
+      Tx "Maladie" aujourd'hui
         [ Debit  "645100:URSSAF" 130.00
         , Credit "431100:URSSAF" 130.00
         ]
+
+  describe "Charges salariales" $ do
+
+    it "calcule la sécurité sociale déplafonnée" $ do
+      cotisationSecuDeplafonnee aujourd'hui 1000 `shouldBe`
+        Tx "Sécurité sociale déplafonnée" aujourd'hui
+          [ Debit  "421100:TOTO"   4.00
+          , Credit "431100:URSSAF" 4.00
+          ]
