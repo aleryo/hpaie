@@ -60,24 +60,21 @@ cotisationSalariale libelle date cotisation =
 
 cotisationSecuDeplafonnee' montant = arrondi $ fromRational tauxSecuDeplafonnée * montant
 
-cotisationSecuDeplafonnee :: Date -> Montant -> Transaction
-cotisationSecuDeplafonnee date montant =
-  cotisationSalariale "Sécurité sociale déplafonnée" date cotisation
-  where cotisation = cotisationSecuDeplafonnee' montant
-
 cotisationSecuPlafonneeSalariale' montant = arrondi $ fromRational tauxSecuPlafonnée * min montant trancheA
-
-cotisationSecuPlafonneeSalariale :: Date -> Montant -> Transaction
-cotisationSecuPlafonneeSalariale date montant =
-  cotisationSalariale "Sécurité sociale plafonnée" date cotisation
-  where cotisation = cotisationSecuPlafonneeSalariale'  montant
 
 complementaireTrancheA' montant = arrondi $ fromRational tauxComplémentaireTrancheA * min montant trancheA
 
+cotisationSecuDeplafonnee :: Date -> Montant -> Transaction
+cotisationSecuDeplafonnee date =
+  cotisationSalariale "Sécurité sociale déplafonnée" date . cotisationSecuDeplafonnee'
+
+cotisationSecuPlafonneeSalariale :: Date -> Montant -> Transaction
+cotisationSecuPlafonneeSalariale date =
+  cotisationSalariale "Sécurité sociale plafonnée" date . cotisationSecuPlafonneeSalariale' 
+
 complementaireTrancheA :: Date -> Montant -> Transaction
-complementaireTrancheA date montant =
-  cotisationSalariale "Complémentaire tranche A" date cotisation
-  where cotisation = complementaireTrancheA' montant
+complementaireTrancheA date =
+  cotisationSalariale "Complémentaire tranche A" date . complementaireTrancheA' 
 
 arrondi :: Montant -> Montant
 arrondi m = (fromIntegral $ round $ m * 100) / 100
@@ -128,39 +125,19 @@ spec = describe "Générateur de paie" $ do
   describe "Charges salariales" $ do
 
     it "calcule la sécurité sociale déplafonnée" $ do
-      cotisationSecuDeplafonnee aujourd'hui 1000 `shouldBe`
-        Tx "Sécurité sociale déplafonnée" aujourd'hui
-          [ Debit  "421100:TOTO"   4.00
-          , Credit "431100:URSSAF" 4.00
-          ]
+      cotisationSecuDeplafonnee' 1000 `shouldBe` 4.00
 
     it "calcule la sécurité sociale plafonnée" $ do
-      cotisationSecuPlafonneeSalariale aujourd'hui 1000 `shouldBe`
-        Tx "Sécurité sociale plafonnée" aujourd'hui
-          [ Debit  "421100:TOTO"   69.00
-          , Credit "431100:URSSAF" 69.00
-          ]
+      cotisationSecuPlafonneeSalariale'  1000 `shouldBe` 69.00
 
       let montant = arrondi $ trancheA * fromRational tauxSecuPlafonnée
       
-      cotisationSecuPlafonneeSalariale aujourd'hui (trancheA + 100) `shouldBe`
-        Tx "Sécurité sociale plafonnée" aujourd'hui
-          [ Debit  "421100:TOTO"   montant
-          , Credit "431100:URSSAF" montant
-          ]
+      cotisationSecuPlafonneeSalariale'  (trancheA + 100) `shouldBe` montant
 
     it "calcule la complémentaire tranche A" $ do
-      complementaireTrancheA aujourd'hui 1000 `shouldBe`
-        Tx "Complémentaire tranche A" aujourd'hui
-          [ Debit  "421100:TOTO"   40.30
-          , Credit "431100:URSSAF" 40.30
-          ]
+      complementaireTrancheA' 1000 `shouldBe` 40.30
 
       let montant = arrondi $ trancheA * fromRational tauxComplémentaireTrancheA
 
-      complementaireTrancheA aujourd'hui (trancheA + 100) `shouldBe`
-        Tx "Complémentaire tranche A" aujourd'hui
-          [ Debit  "421100:TOTO"   montant
-          , Credit "431100:URSSAF" montant
-          ]
+      complementaireTrancheA'  (trancheA + 100) `shouldBe` montant
 
