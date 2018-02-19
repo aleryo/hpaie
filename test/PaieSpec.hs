@@ -64,17 +64,12 @@ cotisationSecuPlafonneeSalariale' montant = arrondi $ fromRational tauxSecuPlafo
 
 complementaireTrancheA' montant = arrondi $ fromRational tauxComplémentaireTrancheA * min montant trancheA
 
-cotisationSecuDeplafonnee :: Date -> Montant -> Transaction
-cotisationSecuDeplafonnee date =
-  cotisationSalariale "Sécurité sociale déplafonnée" date . cotisationSecuDeplafonnee'
-
-cotisationSecuPlafonneeSalariale :: Date -> Montant -> Transaction
-cotisationSecuPlafonneeSalariale date =
-  cotisationSalariale "Sécurité sociale plafonnée" date . cotisationSecuPlafonneeSalariale' 
-
-complementaireTrancheA :: Date -> Montant -> Transaction
-complementaireTrancheA date =
-  cotisationSalariale "Complémentaire tranche A" date . complementaireTrancheA' 
+cotisationsSalarialesTx :: Date -> Montant -> [ Transaction ]
+cotisationsSalarialesTx date montant =
+  fmap ($ montant) [ cotisationSalariale "Sécurité sociale déplafonnée" date . cotisationSecuDeplafonnee'
+                   , cotisationSalariale "Sécurité sociale plafonnée" date . cotisationSecuPlafonneeSalariale' 
+                   , cotisationSalariale "Complémentaire tranche A" date . complementaireTrancheA'
+                   ]
 
 arrondi :: Montant -> Montant
 arrondi m = (fromIntegral $ round $ m * 100) / 100
