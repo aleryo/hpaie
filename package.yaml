@@ -21,10 +21,16 @@ description:         Please see the README on Github at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
+- cassava
+- directory
+- filepath
+- parsec
+- vector
 
 default-extensions:
 - OverloadedStrings
-  
+- DeriveGeneric
 
 library:
   source-dirs: src
@@ -52,6 +58,6 @@ tests:
     - hpaie
     - hspec
     - hspec-discover
+    - HUnit
     - text
     - time
-
