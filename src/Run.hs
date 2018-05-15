@@ -2,6 +2,7 @@ module Run where
 
 import           Control.Exception
 import qualified Data.ByteString.Lazy as LBS
+import           Data.Char
 import           Data.Csv
 import           Data.Monoid
 import           Data.Text            as Text
@@ -15,6 +16,7 @@ import           System.FilePath
 import           Text.Parsec
 import           Text.Parsec.Language
 import           Text.Parsec.Token
+
 
 comptaAnalytique :: FilePath -> FilePath -> [ Text ] -> IO ()
 comptaAnalytique _input output _keys = do
@@ -58,11 +60,24 @@ data Montant = EUR Integer
 
 instance FromField Montant where
   parseField bs =
-    either (fail . show) (pure . EUR) $ parse (integer $ makeTokenParser emptyDef) "" (unpack $ decodeUtf8 bs)
+    either (fail . show) (pure . EUR) $ parse decimal "" (unpack $ decodeUtf8 bs)
+    where
+
+      decimal = do
+        intPart <- read <$> (spaces *> digits)
+        comma
+        decPart <- read <$> (digits <* spaces)
+        pure $ (intPart * 100 + decPart)
+
+      digits = many1 digit
+      spaces = many space
+      comma = char ','
 
 parseCSV :: FilePath -> IO [ Entry ]
 parseCSV fp = do
   csv <- LBS.readFile fp
-  case decodeByName csv  of
+  case decodeByNameWith options csv  of
     Left err     -> throwIO $ userError err
     Right (_, v) -> pure $ V.toList v
+  where
+    options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }

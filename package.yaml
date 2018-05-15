@@ -26,6 +26,8 @@ dependencies:
 - directory
 - filepath
 - parsec
+- text
+- time
 - vector
 
 default-extensions:
