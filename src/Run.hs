@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Run where
 
 import           Control.Exception
@@ -23,9 +24,22 @@ comptaAnalytique _input output _keys = do
   Text.writeFile output (Text.unlines
                          [ "2018/05/14 Frais tenu de comptes"
                          , "    612000:KPMG               120.00"
-                         , "    801000:Arnaud              60.00"
-                         , "    802000:Fred                60.00"
+                         , "    801000:Arnaud             -60.00"
+                         , "    802000:Fred               -60.00"
                          ])
+
+
+parseCSV :: FilePath -> IO [ Entry ]
+parseCSV fp = do
+  csv <- LBS.readFile fp
+  case decodeByNameWith options csv  of
+    Left err     -> throwIO $ userError err
+    Right (_, v) -> pure $ V.toList v
+  where
+    options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
+
+generateLedger :: FilePath -> [ Text ] -> [ Entry ] -> IO ()
+generateLedger fp repartition entries = pure ()
 
 data Entry = Entry { date    :: Day
                    , compte  :: Text
@@ -73,11 +87,17 @@ instance FromField Montant where
       spaces = many space
       comma = char ','
 
-parseCSV :: FilePath -> IO [ Entry ]
-parseCSV fp = do
-  csv <- LBS.readFile fp
-  case decodeByNameWith options csv  of
-    Left err     -> throwIO $ userError err
-    Right (_, v) -> pure $ V.toList v
-  where
-    options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
+generateTransaction :: [ Text ] -> Entry -> Transaction
+generateTransaction keys Entry{..} =
+  Transaction date libelle []
+
+data Transaction = Transaction { txDate     :: Day
+                               , txLabel    :: Text
+                               , txPostings :: [ Posting ]
+                               }
+  deriving (Eq, Show, Generic)
+
+data Posting = Posting { postAccount :: Text
+                       , postAmount  :: Montant
+                       }
+  deriving (Eq, Show, Generic)

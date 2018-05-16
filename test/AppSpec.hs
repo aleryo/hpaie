@@ -18,8 +18,8 @@ sample1Ledger :: Text
 sample1Ledger = Text.unlines
   [ "2018/05/14 Frais tenu de comptes"
   , "    612000:KPMG               120.00"
-  , "    801000:Arnaud              60.00"
-  , "    802000:Fred                60.00"
+  , "    801000:Arnaud             -60.00"
+  , "    802000:Fred               -60.00"
   ]
 
 
@@ -35,6 +35,21 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
     it "parse le fichier CSV" $ do
       parsed <- parseCSV "sample1.csv"
       parsed `shouldBe` [ Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (EUR 12000) ]
+
+    it "répartit une Entry équitablement quand il génère une transaction" $
+      generateTransaction ["Arnaud", "Fred" ] (Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (EUR 12000))
+      `shouldBe`
+      Transaction (fromJust $ isoDate "2018-05-14") "Frais tenu de comptes"
+      [ Posting "612000:KPMG"   (EUR 12000)
+      , Posting "801000:Arnaud"              (EUR (-6000))
+      , Posting "802000:Fred" (EUR (-6000))
+      ]
+
+
+    it "transforme une liste d'Entry en ledger" $ do
+      generateLedger "sample2.ledger" [ "Arnaud", "Fred" ] [ Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (EUR 12000) ]
+
+      "sample2.ledger" `fileContains` sample1Ledger
 
 fileShouldExist :: FilePath -> Expectation
 fileShouldExist fp = do
