@@ -6,6 +6,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Run where
 
+import Data.Text.Prettyprint.Doc.Render.Text
+import Data.Text.Prettyprint.Doc hiding ((<>), space)
 import Data.Ratio
 import           Control.Exception
 import qualified Data.ByteString.Lazy as LBS
@@ -23,15 +25,15 @@ import           System.FilePath
 import           Text.Parsec
 import           Text.Parsec.Language
 import           Text.Parsec.Token
-
+import Text.Printf
 
 comptaAnalytique :: FilePath -> FilePath -> [ Text ] -> IO ()
 comptaAnalytique _input output _keys = do
   Text.writeFile output (Text.unlines
-                         [ "2018/05/14 Frais tenu de comptes"
-                         , "    612000:KPMG               120.00"
-                         , "    801000:Arnaud             -60.00"
-                         , "    802000:Fred               -60.00"
+                         [ "2018-05-14 Frais tenu de comptes"
+                         , "    612000:KPMG          120.00"
+                         , "    801000:Arnaud        -60.00"
+                         , "    802000:Fred          -60.00"
                          ])
 
 
@@ -109,6 +111,9 @@ generateTransaction keys Entry{..} =
     distributedAmount = montant / fromIntegral (Prelude.length keys)
     distributedPostings = fmap (\ k -> Posting k (invert sens) distributedAmount) keys
 
+render :: Transaction -> Text
+render = renderStrict . layoutPretty defaultLayoutOptions . pretty
+
 data Transaction = Transaction { txDate     :: Day
                                , txLabel    :: Text
                                , txPostings :: [ Posting ]
@@ -136,3 +141,22 @@ instance Eq Posting where
     case posting1 of
       Posting _ _ (Montant v) -> case posting2 of
                                    Posting _ _ (Montant v') -> v == v'
+
+instance Pretty Transaction where
+  pretty Transaction{..} =
+    vsep [ pretty txDate <+> pretty txLabel,  postings ]
+    where
+      postings = indent 4 $ vcat $ fmap pretty txPostings
+
+instance Pretty Posting where
+  pretty Posting{..} = fill 20 (pretty postAccount) <+> minus <> pretty postAmount
+    where
+      minus = case postSens of
+                Debit -> ""
+                Credit -> "-"
+
+instance Pretty (Montant a) where
+  pretty (Montant m) = pretty $ (printf "%.2f" (fromRational $ m / 100 :: Double) :: String)
+
+instance Pretty Day where
+  pretty day = pretty $ formatTime defaultTimeLocale (iso8601DateFormat Nothing) day

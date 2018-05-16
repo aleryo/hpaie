@@ -16,10 +16,10 @@ sample1CSV = Text.unlines $ fmap (intercalate ";")
 
 sample1Ledger :: Text
 sample1Ledger = Text.unlines
-  [ "2018/05/14 Frais tenu de comptes"
-  , "    612000:KPMG               120.00"
-  , "    801000:Arnaud             -60.00"
-  , "    802000:Fred               -60.00"
+  [ "2018-05-14 Frais tenu de comptes"
+  , "    612000:KPMG          120.00"
+  , "    801000:Arnaud        -60.00"
+  , "    802000:Fred          -60.00"
   ]
 
 
@@ -44,6 +44,14 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
       , Posting "801000:Arnaud" Credit (6000)
       , Posting "802000:Fred"   Credit (6000)
       ]
+
+    it "formate une transaction au format ledger" $ do
+      render (Transaction (fromJust $ isoDate "2018-05-14") "Frais tenu de comptes"
+               [ Posting "612000:KPMG"   Debit  (12000)
+               , Posting "801000:Arnaud" Credit (6000)
+               , Posting "802000:Fred"   Credit (6000)
+               ]) <> "\n"
+        `shouldBe` sample1Ledger
 
     it "transforme une liste d'Entry en ledger" $ do
       generateLedger "sample2.ledger" [ "Arnaud", "Fred" ] [ Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (12000) ]
