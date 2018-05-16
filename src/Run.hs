@@ -1,6 +1,12 @@
+{-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE GADTs  #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving  #-}
+{-# LANGUAGE KindSignatures  #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
 module Run where
 
+import Data.Ratio
 import           Control.Exception
 import qualified Data.ByteString.Lazy as LBS
 import           Data.Char
@@ -29,7 +35,7 @@ comptaAnalytique _input output _keys = do
                          ])
 
 
-parseCSV :: FilePath -> IO [ Entry ]
+parseCSV :: FilePath -> IO [ Entry cur ]
 parseCSV fp = do
   csv <- LBS.readFile fp
   case decodeByNameWith options csv  of
@@ -38,18 +44,19 @@ parseCSV fp = do
   where
     options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
 
-generateLedger :: FilePath -> [ Text ] -> [ Entry ] -> IO ()
+generateLedger :: FilePath -> [ Text ] -> [ Entry cur ] -> IO ()
 generateLedger fp repartition entries = pure ()
 
-data Entry = Entry { date    :: Day
-                   , compte  :: Text
-                   , libelle :: Text
-                   , sens    :: Sens
-                   , montant :: Montant
-                   }
+data Entry (cur :: Currency) =
+  Entry { date    :: Day
+        , compte  :: Text
+        , libelle :: Text
+        , sens    :: Sens
+        , montant :: Montant cur
+        }
   deriving (Eq,Show,Generic)
 
-instance FromNamedRecord Entry where
+instance FromNamedRecord (Entry a) where
   parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant"
 
 instance FromField Day where
@@ -64,17 +71,24 @@ isoDate = parseTimeM True defaultTimeLocale (iso8601DateFormat Nothing) . Text.u
 data Sens = Debit | Credit
   deriving (Eq,Show,Generic)
 
+invert :: Sens -> Sens
+invert Debit = Credit
+invert Credit = Debit
+
 instance FromField Sens where
   parseField "D" = pure Debit
   parseField "C" = pure Credit
   parseField s   = fail $ "cannot parse " <> show s <> " as a CSV Field"
 
-data Montant = EUR Integer
-  deriving (Eq,Show,Generic)
+data Currency = EUR
 
-instance FromField Montant where
+newtype Montant (currency :: Currency) = Montant Rational
+  deriving (Eq,Show,Generic,Num,Fractional)
+
+
+instance FromField (Montant a) where
   parseField bs =
-    either (fail . show) (pure . EUR) $ parse decimal "" (unpack $ decodeUtf8 bs)
+    either (fail . show) (pure . Montant . fromIntegral) $ parse decimal "" (unpack $ decodeUtf8 bs)
     where
 
       decimal = do
@@ -87,9 +101,13 @@ instance FromField Montant where
       spaces = many space
       comma = char ','
 
-generateTransaction :: [ Text ] -> Entry -> Transaction
+generateTransaction :: [ Text ] -> Entry cur -> Transaction
 generateTransaction keys Entry{..} =
-  Transaction date libelle []
+  Transaction date libelle (basePosting:distributedPostings)
+  where
+    basePosting = Posting compte sens montant
+    distributedAmount = montant / fromIntegral (Prelude.length keys)
+    distributedPostings = fmap (\ k -> Posting k (invert sens) distributedAmount) keys
 
 data Transaction = Transaction { txDate     :: Day
                                , txLabel    :: Text
@@ -97,7 +115,24 @@ data Transaction = Transaction { txDate     :: Day
                                }
   deriving (Eq, Show, Generic)
 
-data Posting = Posting { postAccount :: Text
-                       , postAmount  :: Montant
-                       }
-  deriving (Eq, Show, Generic)
+data Posting where
+  Posting :: forall cur . { postAccount :: Text
+                          , postSens    :: Sens
+                          , postAmount  :: Montant cur
+                          } -> Posting
+
+instance Show Posting where
+  show Posting{..} = "Posting {" <>
+                     "postAccount = " <> show postAccount <>
+                     ", postSens = " <> show postSens <>
+                     ", postAmount = " <> show postAmount <>
+                     "}"
+
+
+instance Eq Posting where
+  posting1 == posting2 =
+    postAccount posting1 == postAccount posting2 &&
+    postSens posting1 == postSens posting2 &&
+    case posting1 of
+      Posting _ _ (Montant v) -> case posting2 of
+                                   Posting _ _ (Montant v') -> v == v'
