@@ -27,7 +27,7 @@ spec :: Spec
 spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application" $ do
   describe "lit un fichier CSV et produit un fichier ledger" $ do
     it "utilise une clé de répartition équitable" $ do
-      comptaAnalytique "sample1.csv" "sample1.ledger" [ "Arnaud", "Fred" ]
+      comptaAnalytique "sample1.csv" "sample1.ledger" [ "801000:Arnaud", "802000:Fred" ]
 
       fileShouldExist "sample1.ledger"
       "sample1.ledger" `fileContains` sample1Ledger
@@ -54,7 +54,7 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
         `shouldBe` sample1Ledger
 
     it "transforme une liste d'Entry en ledger" $ do
-      generateLedger "sample2.ledger" [ "Arnaud", "Fred" ] [ Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (12000) ]
+      generateLedger "sample2.ledger" [ "801000:Arnaud", "802000:Fred" ] [ Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (12000) ]
 
       "sample2.ledger" `fileContains` sample1Ledger
 

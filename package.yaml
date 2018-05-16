@@ -27,6 +27,7 @@ dependencies:
 - filepath
 - parsec
 - prettyprinter
+- process
 - text
 - time
 - vector

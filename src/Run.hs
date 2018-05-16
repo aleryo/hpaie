@@ -26,15 +26,11 @@ import           Text.Parsec
 import           Text.Parsec.Language
 import           Text.Parsec.Token
 import Text.Printf
+import System.IO
 
 comptaAnalytique :: FilePath -> FilePath -> [ Text ] -> IO ()
-comptaAnalytique _input output _keys = do
-  Text.writeFile output (Text.unlines
-                         [ "2018-05-14 Frais tenu de comptes"
-                         , "    612000:KPMG          120.00"
-                         , "    801000:Arnaud        -60.00"
-                         , "    802000:Fred          -60.00"
-                         ])
+comptaAnalytique input output keys =
+  parseCSV input >>= generateLedger output keys
 
 
 parseCSV :: FilePath -> IO [ Entry cur ]
@@ -47,7 +43,9 @@ parseCSV fp = do
     options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
 
 generateLedger :: FilePath -> [ Text ] -> [ Entry cur ] -> IO ()
-generateLedger fp repartition entries = pure ()
+generateLedger fp repartition entries =
+  let txs = fmap (generateTransaction repartition) entries
+  in withFile fp WriteMode $ \ h -> hPutDoc h (vcat (fmap pretty txs) <> hardline)
 
 data Entry (cur :: Currency) =
   Entry { date    :: Day
