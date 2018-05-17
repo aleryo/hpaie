@@ -45,6 +45,17 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
       , Posting "802000:Fred"   Credit (6000)
       ]
 
+    it "répartit le reste d'une division non entière quand il génère une transaction" $
+      generateTransaction ["801000:Arnaud", "802000:Fred", "803000:Bernard" ]
+      (Entry (fromJust $ isoDate "2018-05-14") "612000:KPMG" "Frais tenu de comptes" Debit (13000))
+      `shouldBe`
+      Transaction (fromJust $ isoDate "2018-05-14") "Frais tenu de comptes"
+      [ Posting "612000:KPMG"   Debit  (13000)
+      , Posting "801000:Arnaud" Credit (4334)
+      , Posting "802000:Fred"   Credit (4333)
+      , Posting "803000:Bernard"   Credit (4333)
+      ]
+
     it "formate une transaction au format ledger" $ do
       render (Transaction (fromJust $ isoDate "2018-05-14") "Frais tenu de comptes"
                [ Posting "612000:KPMG"   Debit  (12000)

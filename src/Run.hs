@@ -82,8 +82,8 @@ instance FromField Sens where
 
 data Currency = EUR
 
-newtype Montant (currency :: Currency) = Montant Rational
-  deriving (Eq,Show,Generic,Num,Fractional)
+newtype Montant (currency :: Currency) = Montant Integer
+  deriving (Eq,Ord,Show,Generic,Num,Enum,Real,Integral)
 
 
 instance FromField (Montant a) where
@@ -106,8 +106,13 @@ generateTransaction keys Entry{..} =
   Transaction date libelle (basePosting:distributedPostings)
   where
     basePosting = Posting compte sens montant
-    distributedAmount = montant / fromIntegral (Prelude.length keys)
-    distributedPostings = fmap (\ k -> Posting k (invert sens) distributedAmount) keys
+    (distributedAmount, remaining) = montant `divMod` fromIntegral (Prelude.length keys)
+    distributedPostings =
+      case fmap (\ k -> Posting k (invert sens) distributedAmount) keys of
+        (Posting a s (Montant m):ps) -> Posting a s (addRemaining m):ps
+        [] -> []
+    addRemaining v = case remaining of
+                       Montant m' -> Montant $ v + m'
 
 render :: Transaction -> Text
 render = renderStrict . layoutPretty defaultLayoutOptions . pretty
@@ -154,7 +159,7 @@ instance Pretty Posting where
                 Credit -> "-"
 
 instance Pretty (Montant a) where
-  pretty (Montant m) = pretty $ (printf "%.2f" (fromRational $ m / 100 :: Double) :: String)
+  pretty (Montant m) = pretty $ (printf "%.2f" (fromIntegral m / 100 :: Double) :: String)
 
 instance Pretty Day where
   pretty day = pretty $ formatTime defaultTimeLocale (iso8601DateFormat Nothing) day
