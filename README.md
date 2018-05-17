@@ -43,4 +43,4 @@ The `out.ledger` file contains:
 
 ## TODO
 
-* [ ] ensure all transactions are balanced
+* [x] ensure all transactions are balanced
