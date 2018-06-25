@@ -1,32 +1,33 @@
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE GADTs  #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving  #-}
-{-# LANGUAGE KindSignatures  #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE RecordWildCards            #-}
 module Run where
 
-import Data.Text.Prettyprint.Doc.Render.Text
-import Data.Text.Prettyprint.Doc hiding ((<>), space)
-import Data.Ratio
 import           Control.Exception
-import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Lazy                  as LBS
 import           Data.Char
 import           Data.Csv
 import           Data.Monoid
-import           Data.Text            as Text
+import           Data.Ratio
+import           Data.Text                             as Text
 import           Data.Text.Encoding
-import           Data.Text.IO         as Text
-import           Data.Time.Calendar   (Day (..))
+import           Data.Text.IO                          as Text
+import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
+import           Data.Text.Prettyprint.Doc.Render.Text
+import           Data.Time.Calendar                    (Day (..))
 import           Data.Time.Format
-import qualified Data.Vector          as V
+import qualified Data.Vector                           as V
 import           GHC.Generics
 import           System.FilePath
+import           System.IO
 import           Text.Parsec
 import           Text.Parsec.Language
 import           Text.Parsec.Token
-import Text.Printf
-import System.IO
+import           Text.Printf
 
 comptaAnalytique :: FilePath -> FilePath -> [ Text ] -> IO ()
 comptaAnalytique input output keys =
@@ -61,9 +62,12 @@ instance FromNamedRecord (Entry a) where
 
 instance FromField Day where
   parseField bs =
-    case isoDate (decodeUtf8 bs) of
+    case ddmmYYYY (decodeUtf8 bs) of
       Nothing -> fail $ "cannot parse " <> show bs <> " as a date"
       Just d  -> pure d
+
+ddmmYYYY :: Text -> Maybe Day
+ddmmYYYY = parseTimeM True defaultTimeLocale "%d/%m/%Y" . Text.unpack
 
 isoDate :: Text -> Maybe Day
 isoDate = parseTimeM True defaultTimeLocale (iso8601DateFormat Nothing) . Text.unpack
@@ -72,7 +76,7 @@ data Sens = Debit | Credit
   deriving (Eq,Show,Generic)
 
 invert :: Sens -> Sens
-invert Debit = Credit
+invert Debit  = Credit
 invert Credit = Debit
 
 instance FromField Sens where
@@ -110,7 +114,7 @@ generateTransaction keys Entry{..} =
     distributedPostings =
       case fmap (\ k -> Posting k (invert sens) distributedAmount) keys of
         (Posting a s (Montant m):ps) -> Posting a s (addRemaining m):ps
-        [] -> []
+        []                           -> []
     addRemaining v = case remaining of
                        Montant m' -> Montant $ v + m'
 
@@ -124,10 +128,7 @@ data Transaction = Transaction { txDate     :: Day
   deriving (Eq, Show, Generic)
 
 data Posting where
-  Posting :: forall cur . { postAccount :: Text
-                          , postSens    :: Sens
-                          , postAmount  :: Montant cur
-                          } -> Posting
+  Posting :: { postAccount :: Text, postSens :: Sens, postAmount ::Montant cur}  ->  Posting
 
 instance Show Posting where
   show Posting{..} = "Posting {" <>
@@ -155,7 +156,7 @@ instance Pretty Posting where
   pretty Posting{..} = fill 20 (pretty postAccount) <+> minus <> pretty postAmount
     where
       minus = case postSens of
-                Debit -> ""
+                Debit  -> ""
                 Credit -> "-"
 
 instance Pretty (Montant a) where

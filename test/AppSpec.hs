@@ -11,8 +11,10 @@ import           Test.HUnit
 
 sample1CSV = Text.unlines $ fmap (intercalate ";")
   [ [ "Date", "compte", "libelle", "sens", "montant" ]
-  , [ "2018-05-14", "612000:KPMG", "Frais tenu de comptes", "D", "120,00" ]
+  , [ "14/05/2018", "612000:KPMG", "Frais tenu de comptes", "D", "120,00" ]
   ]
+
+-- Compte;Journal;Date;Piece;Libelle;RefLibelle;Reference;Debit;Credit;Solde
 
 sample1Ledger :: Text
 sample1Ledger = Text.unlines
