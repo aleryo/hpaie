@@ -153,7 +153,7 @@ instance Pretty Transaction where
       postings = indent 4 $ vcat $ fmap pretty txPostings
 
 instance Pretty Posting where
-  pretty Posting{..} = fill 20 (pretty postAccount) <+> minus <> pretty postAmount
+  pretty Posting{..} = fill 50 (pretty postAccount) <+> minus <> pretty postAmount
     where
       minus = case postSens of
                 Debit  -> ""
