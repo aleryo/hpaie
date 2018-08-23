@@ -7,6 +7,6 @@ import           System.Process
 
 main :: IO ()
 main = do
-  (inputFile:outputFile:keys) <- getArgs
-  comptaAnalytique inputFile outputFile (fmap pack keys)
+  (inputFile:outputFile:[]) <- getArgs
+  comptaAnalytique inputFile outputFile
   callProcess "hledger" [ "-f", outputFile, "bal" ]

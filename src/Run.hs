@@ -5,6 +5,9 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+
 module Run where
 
 import           Control.Exception
@@ -29,9 +32,9 @@ import           Text.Parsec.Language
 import           Text.Parsec.Token
 import           Text.Printf
 
-comptaAnalytique :: FilePath -> FilePath -> [ Text ] -> IO ()
-comptaAnalytique input output keys =
-  parseCSV input >>= generateLedger output keys
+comptaAnalytique :: FilePath -> FilePath -> IO ()
+comptaAnalytique input output =
+  parseCSV input >>= generateLedger output
 
 
 parseCSV :: FilePath -> IO [ Entry cur ]
@@ -43,9 +46,9 @@ parseCSV fp = do
   where
     options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
 
-generateLedger :: FilePath -> [ Text ] -> [ Entry cur ] -> IO ()
-generateLedger fp repartition entries =
-  let txs = fmap (generateTransaction repartition) entries
+generateLedger :: FilePath -> [ Entry cur ] -> IO ()
+generateLedger fp entries =
+  let txs = fmap generateTransaction entries
   in withFile fp WriteMode $ \ h -> hPutDoc h (vcat (fmap pretty txs) <> hardline)
 
 data Entry (cur :: Currency) =
@@ -54,11 +57,12 @@ data Entry (cur :: Currency) =
         , libelle :: Text
         , sens    :: Sens
         , montant :: Montant cur
+        , keys    :: Keys
         }
   deriving (Eq,Show,Generic)
 
 instance FromNamedRecord (Entry a) where
-  parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant"
+  parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant" <*> r .: "keys"
 
 instance FromField Day where
   parseField bs =
@@ -89,7 +93,6 @@ data Currency = EUR
 newtype Montant (currency :: Currency) = Montant Integer
   deriving (Eq,Ord,Show,Generic,Num,Enum,Real,Integral)
 
-
 instance FromField (Montant a) where
   parseField bs =
     either (fail . show) (pure . Montant . fromIntegral) $ parse decimal "" (unpack $ decodeUtf8 bs)
@@ -105,8 +108,22 @@ instance FromField (Montant a) where
       spaces = many space
       comma = char ','
 
-generateTransaction :: [ Text ] -> Entry cur -> Transaction
-generateTransaction keys Entry{..} =
+
+type Keys = [ Text ] 
+
+arnaud  = "801000:Arnaud"
+bernard = "802000:Bernard"
+fred    = "803000:Fred"
+
+instance FromField Keys where
+  parseField "A" = pure [ arnaud ]
+  parseField "B" = pure [ bernard ]
+  parseField "F" = pure [ fred ]
+  parseField _ = pure [ arnaud, bernard, fred ]
+
+
+generateTransaction :: Entry cur -> Transaction
+generateTransaction Entry{..} =
   Transaction date libelle (basePosting:distributedPostings)
   where
     basePosting = Posting compte sens montant
