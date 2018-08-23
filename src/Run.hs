@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures             #-}
@@ -6,7 +7,6 @@
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
-{-# LANGUAGE FlexibleInstances          #-}
 
 module Run where
 
@@ -44,7 +44,7 @@ parseCSV fp = do
     Left err     -> throwIO $ userError err
     Right (_, v) -> pure $ V.toList v
   where
-    options = defaultDecodeOptions { decDelimiter = fromIntegral (ord ';') }
+    options = defaultDecodeOptions { decDelimiter = fromIntegral 0x09 }
 
 generateLedger :: FilePath -> [ Entry cur ] -> IO ()
 generateLedger fp entries =
@@ -116,13 +116,13 @@ bernard = "802000:Bernard"
 fred    = "803000:Fred"
 
 instance FromField Keys where
-  parseField "A" = pure [ arnaud ]
-  parseField "Arnaud" = pure [ arnaud ]
-  parseField "B" = pure [ bernard ]
+  parseField "A"       = pure [ arnaud ]
+  parseField "Arnaud"  = pure [ arnaud ]
+  parseField "B"       = pure [ bernard ]
   parseField "Bernard" = pure [ bernard ]
-  parseField "F" = pure [ fred ]
-  parseField "Fred" = pure [ fred ]
-  parseField _ = pure [ arnaud, bernard, fred ]
+  parseField "F"       = pure [ fred ]
+  parseField "Fred"    = pure [ fred ]
+  parseField _         = pure [ arnaud, bernard, fred ]
 
 
 generateTransaction :: Entry cur -> Transaction

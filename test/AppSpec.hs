@@ -9,7 +9,7 @@ import           System.Directory (doesFileExist)
 import           Test.Hspec
 import           Test.HUnit
 
-sample1CSV = Text.unlines $ fmap (intercalate ";")
+sample1CSV = Text.unlines $ fmap (intercalate "\t")
   [ [ "Date", "compte", "libelle", "sens", "montant", "keys" ]
   , [ "14/05/2018", "612000:Fournisseur-KPMG", "Frais tenu de comptes", "D", "120,00", "" ]
   ]
