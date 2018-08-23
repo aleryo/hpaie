@@ -7,9 +7,11 @@ Generate a [hledger](http://hledger.org/)-formatted file from a CSV-formatted fl
 Given the following input file named `in.csv`:
 
 ```
-Date;compte;libelle;sens;montant
-2018-05-14;612000:KPMG;Frais tenu de comptes;D;120,00;ALL
-2018-05-15;63000:Resto;Resto;D;180,00;ALL
+Date;compte;libelle;sens;montant;keys
+14/05/2018;612000:KPMG;Frais tenu de comptes;D;120,00;ALL
+15/05/2018;63000:Resto;Resto d'equipe;D;180,00;ALL
+16/05/2018;63001:Hotel;Mission pour Tesla;D;30,00;Bernard
+17/05/2018;63002:Train;Mission pour Google;D;20,00;Arnaud
 ```
 
 when run, it outputs:
