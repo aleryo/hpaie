@@ -2,9 +2,12 @@
 module AssignSpec where
 
 import           Assign
+import           Data.Maybe
 import           Data.Text    as Text
 import           Data.Text.IO as Text
+import           Date
 import           Helper
+import           RawEntry
 import           Test.Hspec
 
 -- raw input from KPMG export
@@ -33,3 +36,8 @@ spec = before (Text.writeFile "rawSample.tsv" sample1CSV ) $ describe "Assignmen
 
       fileShouldExist "sample1.tsv"
       "sample1.tsv" `fileContains` sampleOut
+
+    it "can parse raw entries from TSV" $ do
+      parsed <- parseRawInput "rawSample.tsv"
+      parsed `shouldBe` [ RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000)
+                        , RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329) ]

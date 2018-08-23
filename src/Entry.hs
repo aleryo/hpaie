@@ -9,11 +9,10 @@ module Entry where
 import           Data.Csv
 import           Data.Monoid
 import           Data.Text          as Text
-import           Data.Text.Encoding
 import           Data.Time.Calendar (Day (..))
-import           Data.Time.Format
+import           Date               ()
 import           GHC.Generics
-import           Text.Parsec
+import           Montant
 
 data Entry (cur :: Currency) =
   Entry { date    :: Day
@@ -28,18 +27,6 @@ data Entry (cur :: Currency) =
 instance FromNamedRecord (Entry a) where
   parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant" <*> r .: "keys"
 
-instance FromField Day where
-  parseField bs =
-    case ddmmYYYY (decodeUtf8 bs) of
-      Nothing -> fail $ "cannot parse " <> show bs <> " as a date"
-      Just d  -> pure d
-
-ddmmYYYY :: Text -> Maybe Day
-ddmmYYYY = parseTimeM True defaultTimeLocale "%d/%m/%Y" . Text.unpack
-
-isoDate :: Text -> Maybe Day
-isoDate = parseTimeM True defaultTimeLocale (iso8601DateFormat Nothing) . Text.unpack
-
 data Sens = Debit | Credit
   deriving (Eq,Show,Generic)
 
@@ -51,24 +38,6 @@ instance FromField Sens where
   parseField "D" = pure Debit
   parseField "C" = pure Credit
   parseField s   = fail $ "cannot parse " <> show s <> " as a CSV Field"
-
-data Currency = EUR
-
-newtype Montant (currency :: Currency) = Montant Integer
-  deriving (Eq,Ord,Show,Generic,Num,Enum,Real,Integral)
-
-instance FromField (Montant a) where
-  parseField bs =
-    either (fail . show) (pure . Montant . fromIntegral) $ parse decimal "" (unpack $ decodeUtf8 bs)
-    where
-      decimal :: Parsec String () Int
-      decimal = do
-        intPart <- read <$> (spaces *> digits <* comma)
-        decPart <- read <$> (digits <* spaces)
-        pure $ (intPart * 100 + decPart)
-
-      digits = many1 digit
-      comma = char ','
 
 
 type Keys = [ Text ]

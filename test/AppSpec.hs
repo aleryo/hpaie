@@ -2,15 +2,15 @@ module AppSpec where
 
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Text        as Text
-import           Data.Text.IO     as Text
+import           Data.Text    as Text
+import           Data.Text.IO as Text
+import           Date
 import           Entry
 import           Helper
 import           Run
-import           System.Directory (doesFileExist)
 import           Test.Hspec
-import           Test.HUnit
 
+sample1CSV :: Text
 sample1CSV = Text.unlines $ fmap (intercalate "\t")
   [ [ "Date", "compte", "libelle", "sens", "montant", "keys" ]
   , [ "14/05/2018", "612000:Fournisseur-KPMG", "Frais tenu de comptes", "D", "120,00", "" ]
