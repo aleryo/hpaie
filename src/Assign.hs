@@ -30,7 +30,7 @@ import           Text.Printf
 assignKeys :: FilePath -> FilePath -> FilePath -> IO ()
 assignKeys rawInputTsv rulesFile outputTsv = do
   inp <- parseRawInput rawInputTsv
-  rules <- parseRules rulesFile
+  rules <- parseRulesFile rulesFile
   generateAssignedEntries outputTsv inp rules
 
 
@@ -43,9 +43,10 @@ parseRawInput rawInputFile = do
   where
     options = defaultDecodeOptions { decDelimiter = fromIntegral (0x09 :: Int)}
 
-
-parseRules :: FilePath -> IO Rules
-parseRules _rulesFile = pure mempty
+parseRulesFile :: FilePath -> IO Rules
+parseRulesFile rulesFile = do
+  txt <- decodeUtf8 <$> BS.readFile rulesFile
+  either (throwIO . userError . show) pure $ parseRules txt
 
 generateAssignedEntries :: FilePath -> [ RawEntry cur ] -> Rules -> IO ()
 generateAssignedEntries outputTsv _entries _rules =

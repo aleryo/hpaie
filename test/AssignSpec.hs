@@ -8,6 +8,7 @@ import           Data.Text.IO as Text
 import           Date
 import           Helper
 import           RawEntry
+import           Rules
 import           Test.Hspec
 
 -- raw input from KPMG export
@@ -26,18 +27,33 @@ sampleOut = Text.unlines $ fmap (intercalate "\t")
   , [ "31/10/2017", "40110000:Fournisseurs", "Mois Octobre 2017", "C", "24,71", "ALL" ]
   ]
 
+sampleRules :: Rules
+sampleRules = Rules []
+
 spec :: Spec
-spec = before (Text.writeFile "rawSample.tsv" sample1CSV ) $ describe "Assignment" $ do
+spec = before (Text.writeFile "rawSample.tsv" sample1CSV >> Text.writeFile "rules" (renderRules sampleRules)) $ describe "Assignment" $ do
 
-  describe "read raw TSV export and rules file and generate " $ do
+  it "can generate assigned entries from rules and raw entries" $ do
+    assignKeys "rawsample.tsv" "rules" "sample1.tsv"
 
-    it "utilise une clé de répartition équitable" $ do
-      assignKeys "rawsample.tsv" "rules" "sample1.tsv"
+    fileShouldExist "sample1.tsv"
+    "sample1.tsv" `fileContains` sampleOut
 
-      fileShouldExist "sample1.tsv"
-      "sample1.tsv" `fileContains` sampleOut
-
-    it "can parse raw entries from TSV" $ do
-      parsed <- parseRawInput "rawSample.tsv"
-      parsed `shouldBe` [ RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000)
+  it "can parse raw entries from TSV" $ do
+    parsed <- parseRawInput "rawSample.tsv"
+    parsed `shouldBe` [ RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000)
                         , RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329) ]
+
+  describe "Rules" $ do
+
+    it "can parse rules file" $ do
+      parsed <- parseRulesFile "rules"
+      parsed `shouldBe` Rules []
+
+    it "can parse simple mapping rule" $ do
+      parseRules "\"foo.*bar\" -> 801000:Arnaud"
+        `shouldBe` Right (Rules [ Rule "foo.*bar" "801000:Arnaud" ])
+
+    it "can parse several mapping rules" $ do
+      parseRules "\".*baz\" -> 802000:Bernard\n\"foo.*bar\" -> 801000:Arnaud"
+        `shouldBe` Right (Rules [Rule ".*baz" "802000:Bernard", Rule "foo.*bar" "801000:Arnaud" ])
