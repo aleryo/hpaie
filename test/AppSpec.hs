@@ -5,6 +5,7 @@ import           Data.Monoid
 import           Data.Text        as Text
 import           Data.Text.IO     as Text
 import           Entry
+import           Helper
 import           Run
 import           System.Directory (doesFileExist)
 import           Test.Hspec
@@ -77,15 +78,3 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
       generateLedger "sample2.ledger" [ Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit (12000) [ "801000:Arnaud", "802000:Bernard", "803000:Fred" ] ]
 
       "sample2.ledger" `fileContains` sample1Ledger
-
-fileShouldExist :: FilePath -> Expectation
-fileShouldExist fp = do
-  exist <- doesFileExist fp
-  if exist
-    then pure ()
-    else assertFailure $ "file " <> fp <> " does not exist"
-
-fileContains :: FilePath -> Text -> Expectation
-fileContains fp expected = do
-  content <- Text.readFile fp
-  content `shouldBe` expected
