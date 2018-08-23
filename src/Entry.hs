@@ -7,7 +7,6 @@
 module Entry where
 
 import           Data.Csv
-import           Data.Monoid
 import           Data.Text          as Text
 import           Data.Time.Calendar (Day (..))
 import           Date               ()
@@ -26,19 +25,6 @@ data Entry (cur :: Currency) =
 
 instance FromNamedRecord (Entry a) where
   parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant" <*> r .: "keys"
-
-data Sens = Debit | Credit
-  deriving (Eq,Show,Generic)
-
-invert :: Sens -> Sens
-invert Debit  = Credit
-invert Credit = Debit
-
-instance FromField Sens where
-  parseField "D" = pure Debit
-  parseField "C" = pure Credit
-  parseField s   = fail $ "cannot parse " <> show s <> " as a CSV Field"
-
 
 type Keys = [ Text ]
 

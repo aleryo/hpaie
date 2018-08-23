@@ -8,11 +8,25 @@ module Montant where
 
 import           Data.Csv
 import           Data.Maybe
+import           Data.Monoid
 import           Data.Text          as Text
 import           Data.Text.Encoding
 import           Date               ()
 import           GHC.Generics
 import           Text.Parsec
+
+
+data Sens = Debit | Credit
+  deriving (Eq,Show,Generic)
+
+invert :: Sens -> Sens
+invert Debit  = Credit
+invert Credit = Debit
+
+instance FromField Sens where
+  parseField "D" = pure Debit
+  parseField "C" = pure Credit
+  parseField s   = fail $ "cannot parse " <> show s <> " as a CSV Field"
 
 data Currency = EUR
 
