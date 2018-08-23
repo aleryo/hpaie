@@ -109,7 +109,7 @@ instance FromField (Montant a) where
       comma = char ','
 
 
-type Keys = [ Text ] 
+type Keys = [ Text ]
 
 arnaud  = "801000:Arnaud"
 bernard = "802000:Bernard"
@@ -117,8 +117,11 @@ fred    = "803000:Fred"
 
 instance FromField Keys where
   parseField "A" = pure [ arnaud ]
+  parseField "Arnaud" = pure [ arnaud ]
   parseField "B" = pure [ bernard ]
+  parseField "Bernard" = pure [ bernard ]
   parseField "F" = pure [ fred ]
+  parseField "Fred" = pure [ fred ]
   parseField _ = pure [ arnaud, bernard, fred ]
 
 
