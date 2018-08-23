@@ -4,6 +4,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Text        as Text
 import           Data.Text.IO     as Text
+import           Entry
 import           Run
 import           System.Directory (doesFileExist)
 import           Test.Hspec
