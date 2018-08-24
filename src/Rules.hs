@@ -21,14 +21,13 @@ assignToEntries :: Rules -> [ RawEntry cur ] -> [ (RawEntry cur, Text) ]
 assignToEntries rules = fmap (assignToEntry rules)
 
 assignToEntry :: Rules -> RawEntry cur -> (RawEntry cur, Text)
-assignToEntry (Rules rules) e@RawEntry{libelle} = (e, foldr match' "" rules)
+assignToEntry (Rules rules) e@RawEntry{libelle} = (e, foldr match' "ALL" rules)
   where
     match' :: Rule -> Text -> Text
-    match' (Rule re tg) ""  =
+    match' (Rule re tg) cur  =
       if libelle =~ re
       then tg
-      else ""
-    match' _            cur = cur
+      else cur
 
 
 renderRules :: Rules -> Text
