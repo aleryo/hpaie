@@ -45,7 +45,7 @@ parseRules = parse rulesParser "" . unpack
     rulesParser :: Parsec String () Rules
     rulesParser = multipleRules
 
-    multipleRules = Rules <$> sepBy singleRule newline
+    multipleRules = Rules <$> sepEndBy singleRule newline
 
     singleRule :: Parsec String () Rule
     singleRule = do

@@ -55,6 +55,8 @@ spec = before (Text.writeFile "rawSample.tsv" sample1CSV >> Text.writeFile "rule
     it "can parse simple mapping rule" $ do
       parseRules "\"foo.*bar\" -> 801000:Arnaud"
         `shouldBe` Right (Rules [ Rule "foo.*bar" "801000:Arnaud" ])
+      parseRules "\"foo.*bar\" -> 801000:Arnaud\n"
+        `shouldBe` Right (Rules [ Rule "foo.*bar" "801000:Arnaud" ])
 
     it "can parse several mapping rules" $ do
       parseRules "\".*baz\" -> 802000:Bernard\n\"foo.*bar\" -> 801000:Arnaud"
