@@ -1,13 +1,17 @@
+{-# LANGUAGE RecordWildCards #-}
 -- | Provides logic to assign analytic distribution keys to entries
 module Assign where
-
 
 import           Control.Exception
 import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as LBS
+import           Data.Char            (ord)
 import           Data.Csv
+import           Data.Text            (Text)
 import           Data.Text.Encoding
 import qualified Data.Vector          as V
+import           Entry                (Entry (Entry))
+import           Montant
 import           RawEntry
 import           Rules
 
@@ -39,7 +43,18 @@ parseRulesFile rulesFile = do
   txt <- decodeUtf8 <$> BS.readFile rulesFile
   either (throwIO . userError . show) pure $ parseRules txt
 
+generateEntry :: (RawEntry cur, Text) -> Entry cur
+generateEntry (RawEntry{..},a) =
+  Entry date (compte <> ":" <> refLibelle) libelle s m [a]
+  where
+    s = if debit > 0 then Debit else Credit
+    m = debit + credit
 
 generateAssignedEntries :: FilePath -> [ RawEntry cur ] -> Rules -> IO ()
-generateAssignedEntries outputTsv _entries _rules =
-  BS.writeFile outputTsv $ encodeUtf8 $ "Date\tcompte\tlibelle\tsens\tmontant\tkeys\n13/02/2018\t10100000:Capital\tCLOTURE COMPTE CAPITAL\tC\t4000,00\tALL\n31/10/2017\t40110000:Fournisseurs\tMois Octobre 2017\tC\t24,71\tALL\n"
+generateAssignedEntries outputTsv rawEntries rules =
+  LBS.writeFile outputTsv (encodeDefaultOrderedByNameWith opts entries)
+  where
+    entries = fmap generateEntry $ assignToEntries rules rawEntries
+    opts = defaultEncodeOptions { encDelimiter = fromIntegral (ord '\t')
+                                , encUseCrLf = False
+                                }

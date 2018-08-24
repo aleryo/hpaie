@@ -6,7 +6,9 @@ import           Data.Maybe
 import           Data.Text    as Text
 import           Data.Text.IO as Text
 import           Date
+import           Entry
 import           Helper
+import           Montant
 import           RawEntry
 import           Rules
 import           Test.Hspec
@@ -79,3 +81,7 @@ spec = before (Text.writeFile "rawSample.tsv" sample1CSV >> Text.writeFile "rule
           [ (RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000), "ALL")
           , (RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329), "ALL")
           ]
+
+    it "transform RawEntry to Entry" $ do
+      generateEntry (RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000), "ALL")
+      `shouldBe` Entry (fromJust $ isoDate "2018-02-13") "10100000:Capital" "CLOTURE COMPTE CAPITAL" Credit 400000 ["ALL"]

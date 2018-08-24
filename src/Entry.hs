@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures             #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 module Entry where
 
@@ -26,6 +27,19 @@ data Entry (cur :: Currency) =
 instance FromNamedRecord (Entry a) where
   parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant" <*> r .: "keys"
 
+instance ToNamedRecord (Entry a) where
+  toNamedRecord Entry{..} =
+    namedRecord [ "Date" .= date
+                , "compte" .= compte
+                , "libelle" .= libelle
+                , "sens" .= sens
+                , "montant" .= montant
+                , "keys" .= keys
+                ]
+
+instance DefaultOrdered (Entry a) where
+  headerOrder _ = header [ "Date", "compte", "libelle", "sens", "montant", "keys" ]
+
 type Keys = [ Text ]
 
 arnaud,bernard,fred :: Text
@@ -41,3 +55,9 @@ instance FromField Keys where
   parseField "F"       = pure [ fred ]
   parseField "Fred"    = pure [ fred ]
   parseField _         = pure [ arnaud, bernard, fred ]
+
+instance ToField Keys where
+  toField ["801000:Arnaud"]  = "Arnaud"
+  toField ["802000:Bernard"] = "Bernard"
+  toField ["803000:Fred"]    = "Fred"
+  toField _                  = "ALL"

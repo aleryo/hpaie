@@ -13,7 +13,7 @@ import           Data.Text.Encoding
 import           Date               ()
 import           GHC.Generics
 import           Text.Parsec
-
+import           Text.Printf
 
 data Sens = Debit | Credit
   deriving (Eq,Show,Generic)
@@ -26,6 +26,10 @@ instance FromField Sens where
   parseField "D" = pure Debit
   parseField "C" = pure Credit
   parseField s   = fail $ "cannot parse " <> show s <> " as a CSV Field"
+
+instance ToField Sens where
+  toField Debit  = "D"
+  toField Credit = "C"
 
 data Currency = EUR
 
@@ -45,3 +49,8 @@ instance FromField (Montant a) where
 
       digits = many1 digit
       comma = char ','
+
+instance ToField (Montant a) where
+  toField (Montant m) = (encodeUtf8 $ pack $ show q) <> "," <> (encodeUtf8 $ pack $ printf "%02d" r)
+    where
+      (q,r) = m `divMod` 100
