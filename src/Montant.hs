@@ -8,7 +8,6 @@ module Montant where
 
 import           Data.Csv
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Text          as Text
 import           Data.Text.Encoding
 import           Date               ()

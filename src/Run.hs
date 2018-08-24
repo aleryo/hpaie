@@ -13,7 +13,6 @@ module Run where
 import           Control.Exception
 import qualified Data.ByteString.Lazy                  as LBS
 import           Data.Csv
-import           Data.Monoid
 import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
 import           Data.Text.Prettyprint.Doc.Render.Text
 import qualified Data.Vector                           as V

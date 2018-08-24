@@ -1,14 +1,15 @@
 module AppSpec where
 
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Text    as Text
 import           Data.Text.IO as Text
 import           Date
 import           Entry
 import           Helper
+import           Montant
 import           Run
 import           Test.Hspec
+import           Transaction
 
 sample1CSV :: Text
 sample1CSV = Text.unlines $ fmap (intercalate "\t")

@@ -1,6 +1,5 @@
 module Helper where
 
-import           Data.Monoid
 import           Data.Text        as Text
 import           Data.Text.IO     as Text
 import           System.Directory (doesFileExist)

@@ -3,7 +3,6 @@
 module Date where
 
 import           Data.Csv
-import           Data.Monoid
 import           Data.Text          as Text
 import           Data.Text.Encoding
 import           Data.Time.Calendar (Day (..))

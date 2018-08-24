@@ -3,22 +3,13 @@ module Assign where
 
 
 import           Control.Exception
-import qualified Data.ByteString                       as BS
-import qualified Data.ByteString.Lazy                  as LBS
+import qualified Data.ByteString      as BS
+import qualified Data.ByteString.Lazy as LBS
 import           Data.Csv
-import           Data.Monoid
-import           Data.Text                             as Text
 import           Data.Text.Encoding
-import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
-import           Data.Text.Prettyprint.Doc.Render.Text
-import           Data.Time.Calendar                    (Day (..))
-import           Data.Time.Format
-import qualified Data.Vector                           as V
-import           GHC.Generics
+import qualified Data.Vector          as V
 import           RawEntry
 import           Rules
-import           System.IO
-import           Text.Printf
 
 -- | Transform an input tab-separated file containing accounting `Entry`
 -- into another TSV file containing the same entries with keys assigned.
@@ -47,6 +38,7 @@ parseRulesFile :: FilePath -> IO Rules
 parseRulesFile rulesFile = do
   txt <- decodeUtf8 <$> BS.readFile rulesFile
   either (throwIO . userError . show) pure $ parseRules txt
+
 
 generateAssignedEntries :: FilePath -> [ RawEntry cur ] -> Rules -> IO ()
 generateAssignedEntries outputTsv _entries _rules =

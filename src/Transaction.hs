@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 module Transaction where
 
-import           Data.Monoid
 import           Data.Text                             as Text
 import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
 import           Data.Text.Prettyprint.Doc.Render.Text

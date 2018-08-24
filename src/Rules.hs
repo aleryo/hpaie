@@ -1,25 +1,44 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 module Rules where
 
-import           Data.Monoid
-import           Data.Text                             as Text
+import           Data.Text                             (Text, pack, unpack)
 import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
 import           Data.Text.Prettyprint.Doc.Render.Text
+import           RawEntry
 import           Text.Parsec
+import           Text.Regex.TDFA
+import           Text.Regex.TDFA.Text                  ()
 
-data Rules = Rule { regex :: Text, target :: Text }
-           | Rules [ Rules ]
+newtype Rules = Rules [ Rule ]
+  deriving (Eq, Show, Semigroup, Monoid)
+
+data Rule = Rule { regex :: Text, target :: Text }
   deriving (Eq, Show)
 
-instance Monoid Rules where
-  mempty = NoRule
-  mappend = undefined
+assignToEntries :: Rules -> [ RawEntry cur ] -> [ (RawEntry cur, Text) ]
+assignToEntries rules = fmap (assignToEntry rules)
+
+assignToEntry :: Rules -> RawEntry cur -> (RawEntry cur, Text)
+assignToEntry (Rules rules) e@RawEntry{libelle} = (e, foldr match' "" rules)
+  where
+    match' :: Rule -> Text -> Text
+    match' (Rule re tg) ""  =
+      if libelle =~ re
+      then tg
+      else ""
+    match' _            cur = cur
+
 
 renderRules :: Rules -> Text
 renderRules = renderStrict . layoutPretty defaultLayoutOptions . pretty
 
 instance Pretty Rules where
-  pretty (Rule re tg) = pretty re <> " -> " <> pretty tg
   pretty (Rules rls)  = vsep $ fmap pretty rls
+
+instance Pretty Rule where
+  pretty (Rule re tg) = pretty re <> " -> " <> pretty tg
 
 parseRules :: Text -> Either ParseError Rules
 parseRules = parse rulesParser "" . unpack
@@ -29,7 +48,7 @@ parseRules = parse rulesParser "" . unpack
 
     multipleRules = Rules <$> sepBy singleRule newline
 
-    singleRule :: Parsec String () Rules
+    singleRule :: Parsec String () Rule
     singleRule = do
       re <- pack <$> quoted (many1 $ noneOf "\"")
       spaces >> string "->" >> spaces

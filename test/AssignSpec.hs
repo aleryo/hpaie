@@ -42,7 +42,7 @@ spec = before (Text.writeFile "rawSample.tsv" sample1CSV >> Text.writeFile "rule
   it "can parse raw entries from TSV" $ do
     parsed <- parseRawInput "rawSample.tsv"
     parsed `shouldBe` [ RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000)
-                        , RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329) ]
+                      , RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329) ]
 
   describe "Rules" $ do
 
@@ -57,3 +57,15 @@ spec = before (Text.writeFile "rawSample.tsv" sample1CSV >> Text.writeFile "rule
     it "can parse several mapping rules" $ do
       parseRules "\".*baz\" -> 802000:Bernard\n\"foo.*bar\" -> 801000:Arnaud"
         `shouldBe` Right (Rules [Rule ".*baz" "802000:Bernard", Rule "foo.*bar" "801000:Arnaud" ])
+
+  describe "Assignment" $ do
+
+    it "assign rule to rawentry" $ do
+      assignToEntries
+        (Rules [Rule "CLOTURE.*" "ALL", Rule ".*Octobre 2017" "801000:Arnaud" ])
+        [ RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000)
+        , RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329) ]
+        `shouldBe`
+        [ (RawEntry "10100000" "BQ" (fromJust $ isoDate "2018-02-13") "40" "CLOTURE COMPTE CAPITAL" "Capital" "VIRT" 0 400000 (-400000), "ALL")
+        , (RawEntry "40110000" "ACH" (fromJust $ isoDate "2017-10-31") "" "Mois Octobre 2017" "Fournisseurs" "" 0 2471 (-2329), "801000:Arnaud")
+        ]
