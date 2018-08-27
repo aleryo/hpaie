@@ -3,3 +3,5 @@ hpaie.cabal
 *~
 *.ledger
 *.csv
+*.tsv
+rules
