@@ -25,6 +25,7 @@ dependencies:
 - cassava
 - directory
 - filepath
+- optparse-applicative
 - parsec
 - prettyprinter
 - process
@@ -37,6 +38,7 @@ dependencies:
 default-extensions:
 - OverloadedStrings
 - DeriveGeneric
+- NamedFieldPuns
 
 library:
   source-dirs: src
