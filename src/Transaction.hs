@@ -47,8 +47,9 @@ instance Pretty Transaction where
       postings = indent 4 $ vcat $ fmap pretty txPostings
 
 instance Pretty Posting where
-  pretty Posting{..} = fill 50 (pretty postAccount) <+> minus <> pretty postAmount
+  pretty Posting{..} = fill 50 (pretty postAccount) <+> space <> minus <> pretty postAmount
     where
+      space = " "  -- there must be at least 2 spaces between label and amount
       minus = case postSens of
                 Debit  -> ""
                 Credit -> "-"
