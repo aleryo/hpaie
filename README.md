@@ -1,46 +1,45 @@
 # hpaie
 
-Generate a [hledger](http://hledger.org/)-formatted file from a CSV-formatted flat list of expenses, distributing those over various keys.
+Generate a [hledger](http://hledger.org/)-formatted file from a tab-separated flat list of expenses, distributing those over various keys.
 
 ## Usage
 
-Given the following input file named `in.csv`:
+* Demander au comptable le grand livre à la date de clôture souhaitée au format Excel
+  Le grand-livre doit avoir les champs suivants:
 
-```
-Date;compte;libelle;sens;montant
-2018-05-14;612000:KPMG;Frais tenu de comptes;D;120,00
-2018-05-15;63000:Resto;Resto;D;180,00
-```
+  ```
+  Compte	Journal	Date	Piece	Libelle	RefLibelle	Reference	Debit	Credit	Solde
+  10100000	AN	01/10/2018		A-nouveaux au 01/10/2018	Capital		0	4000	-4000
+  10610000	OD	16/03/2019	49	AGO 16.03.19	Réserve légale		0	1780.2	-1780.2
+  ```
 
-when run, it outputs:
+* Télécharger le grand-livre au format `tsv`
+* Transfomer le grand-livre en un fichier `tsv` permettant de procéder à la répartition des charges et produits:
 
-```
-$ hpaie-exe in.csv out.ledger 801:Arnaud 802:Fred 803:Bernard
-              120.00  612000:KPMG
-              180.00  63000:Resto
-             -100.00  801:Arnaud
-             -100.00  802:Fred
-             -100.00  803:Bernard
---------------------
-                   0
-```
+  ```
+  $ assign-keys grand-livre-input.tsv rules grand-livre-output.tsv
+  ```
 
-The `out.ledger` file contains:
+  Cette étape génère un autre fichier `tsv` possédant la structure suivante, avec les mêmes écritures:
 
-```
-2018-05-14 Frais tenu de comptes
-    612000:KPMG          120.00
-    801:Arnaud           -40.00
-    802:Fred             -40.00
-    803:Bernard          -40.00
-2018-05-15 Resto
-    63000:Resto          180.00
-    801:Arnaud           -60.00
-    802:Fred             -60.00
-    803:Bernard          -60.00
-```
+  ```
+  Date	compte	libelle	sens	montant	keys	Description
+  24/01/2019	60600000:Achats non stockés de matières et fournitures	UPDOWN	D	5,00	ALL
+  ```
 
+  La colonne `keys` contient soit le nom des personnes auxquelles assigner l'écriture (séparées par des virgules), soit `ALL` si l'écriture concerne tout le monde
+* Procéder à la répartition, en uploadant le fichier `grand-livre-output.tsv`  sur Google Drive parce que c'est plus simple pour éditer
+  Notes: seules les écritures de charges et produits (comptes 6 et 7) doivent être répartis
+* télécharger le résultat et appliquer la transformation au format ledger:
 
-## TODO
+  ```
+  $ gen-ledger -i grand-livre-output.tsv -o grand-livre.ledger
+  ```
 
-* [x] ensure all transactions are balanced
+  le programme affiche par ailleurs le compte de résultat détaillé, avec la répartition par compte analytique.
+
+* Générer un fichier `CSV` à partir de ces écritures et le transmettre au comptable
+
+  ```
+  $ hledger -f grand-livre.ledger register -o journal-analytique.csv
+  ```
