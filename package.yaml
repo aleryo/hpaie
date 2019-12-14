@@ -80,8 +80,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hpaie
+    - HUnit
     - hspec
     - hspec-discover
-    - HUnit
     - text
     - time
