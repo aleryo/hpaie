@@ -14,15 +14,15 @@ import           Date               ()
 import           GHC.Generics
 import           Montant
 
-data Entry (cur :: Currency) =
-  Entry { date    :: Day
-        , compte  :: Text
-        , libelle :: Text
-        , sens    :: Sens
-        , montant :: Montant cur
-        , keys    :: Keys
-        }
-  deriving (Eq,Show,Generic)
+data Entry (cur :: Currency) = Entry
+    { date    :: Day
+    , compte  :: Text
+    , libelle :: Text
+    , sens    :: Sens
+    , montant :: Montant cur
+    , keys    :: Keys
+    }
+    deriving (Eq, Show, Generic)
 
 instance FromNamedRecord (Entry a) where
   parseNamedRecord r = Entry <$> r .: "Date" <*> r .: "compte" <*> r .: "libelle" <*> r .: "sens" <*> r .: "montant" <*> r .: "keys"
