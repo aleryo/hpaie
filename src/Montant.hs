@@ -44,11 +44,11 @@ instance FromField (Montant a) where
       decimal = do
         sign <- option 1 (char '-' *> spaces >> pure (-1))
         intPart <- read <$> (spaces *> digits)
-        decPart <- optionMaybe $ read <$> (comma *> digits <* spaces)
+        decPart <- optionMaybe $ read <$> (decSeparator *> digits <* spaces)
         pure $ (sign * intPart * 100 + fromMaybe 0 decPart)
 
       digits = many1 digit
-      comma = char ','
+      decSeparator = char '.' <|> char ','
 
 instance ToField (Montant a) where
   toField (Montant m) = (encodeUtf8 $ pack $ show q) <> "," <> (encodeUtf8 $ pack $ printf "%02d" r)

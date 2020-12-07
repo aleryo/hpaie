@@ -22,21 +22,20 @@ import           Rules
 -- contains a list of rules of the form @<regex> -> <key>@. The process
 -- simply tries to apply rules using `Entry`'s `libelle` field and use
 -- the first that match.
-assignKeys :: FilePath -> FilePath -> FilePath -> IO ()
-assignKeys rawInputTsv rulesFile outputTsv = do
-  inp <- parseRawInput rawInputTsv
-  rules <- parseRulesFile rulesFile
+assignKeys :: FilePath -> Maybe FilePath -> FilePath -> Char -> IO ()
+assignKeys rawInputTsv rulesFile outputTsv delimiter = do
+  inp <- parseRawInput rawInputTsv delimiter
+  rules <- maybe (pure $ Rules []) parseRulesFile rulesFile
   generateAssignedEntries outputTsv inp rules
 
-
-parseRawInput :: FilePath -> IO [ RawEntry cur ]
-parseRawInput rawInputFile = do
+parseRawInput :: FilePath -> Char -> IO [ RawEntry cur ]
+parseRawInput rawInputFile delimiter = do
   csv <- LBS.readFile rawInputFile
   case decodeByNameWith options csv  of
     Left err     -> throwIO $ userError err
     Right (_, v) -> pure $ V.toList v
   where
-    options = defaultDecodeOptions { decDelimiter = fromIntegral (0x09 :: Int)}
+    options = defaultDecodeOptions { decDelimiter = fromIntegral $ ord delimiter }
 
 parseRulesFile :: FilePath -> IO Rules
 parseRulesFile rulesFile = do

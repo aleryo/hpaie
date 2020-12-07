@@ -21,11 +21,11 @@ assignToEntries :: Rules -> [ RawEntry cur ] -> [ (RawEntry cur, Text) ]
 assignToEntries rules = fmap (assignToEntry rules)
 
 assignToEntry :: Rules -> RawEntry cur -> (RawEntry cur, Text)
-assignToEntry (Rules rules) e@RawEntry{libelle} = (e, foldr match' "ALL" rules)
+assignToEntry (Rules rules) e@RawEntry{piece, libelle, reference, refLibelle} = (e, foldr match' "ALL" rules)
   where
     match' :: Rule -> Text -> Text
     match' (Rule re tg) cur  =
-      if libelle =~ re
+      if libelle =~ re || piece =~re || reference =~ re || refLibelle =~ re
       then tg
       else cur
 

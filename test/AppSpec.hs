@@ -21,10 +21,8 @@ sample1Ledger :: Text
 sample1Ledger = Text.unlines
   [ "2018-05-14 Frais tenu de comptes"
   , "    612000:Fournisseur-KPMG                            120.00"
-  , "    801000:Arnaud                                      -30.00"
-  , "    802000:Bernard                                     -30.00"
-  , "    803000:Frederic                                    -30.00"
-  , "    804000:Anna                                        -30.00"
+  , "    801000:Arnaud                                      -60.00"
+  , "    802000:Anna                                        -60.00"
   ]
 
 
@@ -41,7 +39,7 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
 
     it "parse le fichier CSV" $ do
       parsed <- parseCSV "sample1.csv"
-      parsed `shouldBe` [ Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit (12000) ["801000:Arnaud", "802000:Bernard", "803000:Frederic", "804000:Anna" ] ]
+      parsed `shouldBe` [ Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit (12000) ["801000:Arnaud", "802000:Anna" ] ]
 
     it "répartit une Entry équitablement quand il génère une transaction" $
       generateTransaction
@@ -70,14 +68,12 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV ) $ describe "Application
     it "formate une transaction au format ledger" $ do
       render (Transaction (fromJust $ isoDate "2018-05-14") "Frais tenu de comptes"
                [ Posting "612000:Fournisseur-KPMG"   Debit  (12000)
-               , Posting "801000:Arnaud"  Credit (3000)
-               , Posting "802000:Bernard" Credit (3000)
-               , Posting "803000:Frederic"    Credit (3000)
-               , Posting "804000:Anna"    Credit (3000)
+               , Posting "801000:Arnaud"  Credit (6000)
+               , Posting "802000:Anna"    Credit (6000)
                ]) <> "\n"
         `shouldBe` sample1Ledger
 
     it "transforme une liste d'Entry en ledger" $ do
-      generateLedger "sample2.ledger" [ Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit (12000) [ "801000:Arnaud", "802000:Bernard", "803000:Frederic", "804000:Anna" ] ]
+      generateLedger "sample2.ledger" [ Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit (12000) [ "801000:Arnaud", "802000:Anna" ] ]
 
       "sample2.ledger" `fileContains` sample1Ledger
