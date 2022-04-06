@@ -1,40 +1,40 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NamedFieldPuns             #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Rules where
 
-import           Data.Text                             (Text, pack, unpack)
-import           Data.Text.Prettyprint.Doc             hiding (space, (<>))
-import           Data.Text.Prettyprint.Doc.Render.Text
-import           RawEntry
-import           Text.Parsec
-import           Text.Regex.TDFA
-import           Text.Regex.TDFA.Text                  ()
+import Data.Text (Text, pack, unpack)
+import Prettyprinter hiding (space, (<>))
+import Prettyprinter.Render.Text
+import RawEntry
+import Text.Parsec
+import Text.Regex.TDFA
+import Text.Regex.TDFA.Text ()
 
-newtype Rules = Rules [ Rule ]
+newtype Rules = Rules [Rule]
   deriving (Eq, Show, Semigroup, Monoid)
 
-data Rule = Rule { regex :: Text, target :: Text }
+data Rule = Rule {regex :: Text, target :: Text}
   deriving (Eq, Show)
 
-assignToEntries :: Rules -> [ RawEntry cur ] -> [ (RawEntry cur, Text) ]
+assignToEntries :: Rules -> [RawEntry cur] -> [(RawEntry cur, Text)]
 assignToEntries rules = fmap (assignToEntry rules)
 
 assignToEntry :: Rules -> RawEntry cur -> (RawEntry cur, Text)
-assignToEntry (Rules rules) e@RawEntry{piece, libelle, reference, refLibelle} = (e, foldr match' "ALL" rules)
+assignToEntry (Rules rules) e@RawEntry {piece, libelle, reference, refLibelle} = (e, foldr match' "ALL" rules)
   where
     match' :: Rule -> Text -> Text
-    match' (Rule re tg) cur  =
-      if libelle =~ re || piece =~re || reference =~ re || refLibelle =~ re
-      then tg
-      else cur
-
+    match' (Rule re tg) cur =
+      if libelle =~ re || piece =~ re || reference =~ re || refLibelle =~ re
+        then tg
+        else cur
 
 renderRules :: Rules -> Text
 renderRules = renderStrict . layoutPretty defaultLayoutOptions . pretty
 
 instance Pretty Rules where
-  pretty (Rules rls)  = vsep $ fmap pretty rls
+  pretty (Rules rls) = vsep $ fmap pretty rls
 
 instance Pretty Rule where
   pretty (Rule re tg) = pretty re <> " -> " <> pretty tg

@@ -30,7 +30,6 @@ dependencies:
 - prettyprinter
 - process
 - regex-tdfa
-- regex-tdfa-text
 - text
 - time
 - vector
