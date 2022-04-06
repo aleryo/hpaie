@@ -19,18 +19,18 @@ import Prettyprinter.Render.Text
 import System.IO
 import Transaction
 
-comptaAnalytique :: FilePath -> FilePath -> IO ()
-comptaAnalytique input output =
-    parseCSV input >>= generateLedger output
+comptaAnalytique :: FilePath -> FilePath -> Char -> IO ()
+comptaAnalytique input output delimiter =
+    parseCSV delimiter input >>= generateLedger output
 
-parseCSV :: FilePath -> IO [Entry cur]
-parseCSV fp = do
+parseCSV :: Char -> FilePath -> IO [Entry cur]
+parseCSV delimiter fp = do
     csv <- LBS.readFile fp
     case decodeByNameWith options csv of
         Left err -> throwIO $ userError err
         Right (_, v) -> pure $ V.toList v
   where
-    options = defaultDecodeOptions{decDelimiter = fromIntegral (0x09 :: Int)}
+    options = defaultDecodeOptions{decDelimiter = fromIntegral (fromEnum delimiter)}
 
 generateLedger :: FilePath -> [Entry cur] -> IO ()
 generateLedger fp entries =

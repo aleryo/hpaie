@@ -34,13 +34,13 @@ spec = before (Text.writeFile "sample1.csv" sample1CSV) $
     describe "Application" $
         describe "lit un fichier CSV et produit un fichier ledger" $ do
             it "utilise une clé de répartition équitable" $ do
-                comptaAnalytique "sample1.csv" "sample1.ledger"
+                comptaAnalytique "sample1.csv" "sample1.ledger" '\t'
 
                 fileShouldExist "sample1.ledger"
                 "sample1.ledger" `fileContains` sample1Ledger
 
             it "parse le fichier CSV" $ do
-                parsed <- parseCSV "sample1.csv"
+                parsed <- parseCSV '\t' "sample1.csv"
                 parsed `shouldBe` [Entry (fromJust $ isoDate "2018-05-14") "612000:Fournisseur-KPMG" "Frais tenu de comptes" Debit 12000 ["801000:Arnaud", "802000:Anna"]]
 
             it "répartit une Entry équitablement quand il génère une transaction" $
