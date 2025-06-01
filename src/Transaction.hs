@@ -6,7 +6,7 @@ module Transaction where
 
 import Data.Text as Text
 import Data.Time.Calendar (Day (..))
-import Data.Time.Format
+import Data.Time.Format.ISO8601(iso8601Show)
 import GHC.Generics
 import Montant
 import Prettyprinter hiding (space, (<>))
@@ -63,4 +63,4 @@ instance Pretty (Montant a) where
     pretty (Montant m) = pretty $ (printf "%.2f" (fromIntegral m / 100 :: Double) :: String)
 
 instance Pretty Day where
-    pretty day = pretty $ formatTime defaultTimeLocale (iso8601DateFormat Nothing) day
+    pretty day = pretty $ iso8601Show day

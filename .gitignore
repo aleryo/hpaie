@@ -1,5 +1,5 @@
+dist-newstyle/
 .stack-work/
-hpaie.cabal
 *~
 *.ledger
 *.csv

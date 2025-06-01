@@ -6,7 +6,8 @@ import           Data.Csv
 import           Data.Text          as Text
 import           Data.Text.Encoding
 import           Data.Time.Calendar (Day (..))
-import           Data.Time.Format
+import           Data.Time.Format (parseTimeM, formatTime, defaultTimeLocale)
+import           Data.Time.Format.ISO8601 (iso8601ParseM)
 
 instance FromField Day where
   parseField bs =
@@ -21,4 +22,4 @@ ddmmYYYY :: Text -> Maybe Day
 ddmmYYYY = parseTimeM True defaultTimeLocale "%d/%m/%Y" . Text.unpack
 
 isoDate :: Text -> Maybe Day
-isoDate = parseTimeM True defaultTimeLocale (iso8601DateFormat Nothing) . Text.unpack
+isoDate = iso8601ParseM . Text.unpack

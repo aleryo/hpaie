@@ -1,0 +1,142 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: ec1fd2779fa68100ef8377509f5c16afc8c7ee9ae415345d84ca65fe5d1a2cfc
+
+name:           hpaie
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/githubuser/hpaie#readme>
+homepage:       https://github.com/githubuser/hpaie#readme
+bug-reports:    https://github.com/githubuser/hpaie/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2018 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/hpaie
+
+library
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings DeriveGeneric NamedFieldPuns
+  ghc-options: -Wall -Werror -fno-warn-orphans
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , cassava
+    , directory
+    , filepath
+    , optparse-applicative
+    , parsec
+    , prettyprinter
+    , process
+    , regex-tdfa
+    , text
+    , time
+    , vector
+  exposed-modules:
+      Assign
+      Date
+      Entry
+      Lib
+      Montant
+      RawEntry
+      Rules
+      Run
+      Transaction
+  other-modules:
+      Paths_hpaie
+  default-language: Haskell2010
+
+executable assign-keys
+  main-is: Main.hs
+  other-modules:
+      Paths_hpaie
+  hs-source-dirs:
+      assign
+  default-extensions: OverloadedStrings DeriveGeneric NamedFieldPuns
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , cassava
+    , directory
+    , filepath
+    , hpaie
+    , optparse-applicative
+    , parsec
+    , prettyprinter
+    , process
+    , regex-tdfa
+    , text
+    , time
+    , vector
+  default-language: Haskell2010
+
+executable gen-ledger
+  main-is: Main.hs
+  other-modules:
+      Paths_hpaie
+  hs-source-dirs:
+      app
+  default-extensions: OverloadedStrings DeriveGeneric NamedFieldPuns
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , cassava
+    , directory
+    , filepath
+    , hpaie
+    , optparse-applicative
+    , parsec
+    , prettyprinter
+    , process
+    , regex-tdfa
+    , text
+    , time
+    , vector
+  default-language: Haskell2010
+
+test-suite hpaie-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  default-extensions: OverloadedStrings DeriveGeneric NamedFieldPuns
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , base >=4.7 && <5
+    , bytestring
+    , cassava
+    , directory
+    , filepath
+    , hpaie
+    , hspec
+    , hspec-discover
+    , optparse-applicative
+    , parsec
+    , prettyprinter
+    , process
+    , regex-tdfa
+    , text
+    , time
+    , vector
+  other-modules:
+      AppSpec
+      AssignSpec
+      Helper
+      Paths_hpaie
+  default-language: Haskell2010
+  build-tool-depends: hspec-discover:hspec-discover
